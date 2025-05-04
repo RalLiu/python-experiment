@@ -41,11 +41,9 @@ def preview(filename):
     upload_dir=app.config['DATA_FOLDER']
     target_path=upload_dir+'\\'+filename
     if filename.endswith('.csv'):
-        with open(target_path,'r',encoding='UTF-8') as fr:
-            df=pd.read_csv(fr)
+        df=pd.read_csv(target_path)
     else :
-        with open(target_path,'r',encoding='UTF-8') as fr:
-            df=pd.read_excel(fr)
+        df=pd.read_excel(target_path)
     table_html=df.head(50).to_html(index=False)
     return render_template('preview.html',table=table_html)
 
