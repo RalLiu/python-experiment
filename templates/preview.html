@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件预览</title>
+    <style>
+        table{
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th,td{
+            border: 1px solid #ddd;
+            text-align: center;
+            padding: 8px;
+        }
+    </style>
+</head>
+<body>
+    {% if table %}
+    <div>
+        <h4>预览（前50行）</h4>
+        {{table | safe}}
+    </div>
+    {% endif %}
+</body>
+</html>

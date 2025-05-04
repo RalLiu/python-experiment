@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据分析系统</title>
+    <style>
+        table{
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th,td{
+            border: 1px solid #ddd;
+            text-align: center;
+            padding: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center;">文件列表</h1>
+    <input type="file" accept=".csv,.xlsx,.xls" id="add_data">
+    <table id="table">
+        <tr>
+            <th>序号</th>
+            <th>文件名</th>
+            <th>操作</th>
+        </tr>
+    </table>
+    <script src="{{ url_for('static',filename='js/table.js') }}"></script>
+</body>
+</html>
