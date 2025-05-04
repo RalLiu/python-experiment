@@ -16,7 +16,9 @@ def delete_file(file):
 
 @app.route('/')
 def mainframe():
-    return render_template('mainframe.html')
+    file_names=os.listdir(app.config['DATA_FOLDER'])
+    file_names = [f for f in file_names if os.path.isfile(os.path.join(app.config['DATA_FOLDER'], f))]
+    return render_template('mainframe.html',list=file_names)
 
 @app.route('/api/save_file',methods=['POST'])
 def api_save_file():
