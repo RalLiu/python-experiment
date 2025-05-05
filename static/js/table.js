@@ -1,4 +1,4 @@
-document.getElementById('add_data').addEventListener('change',function(e){
+document.getElementById('add_data').addEventListener('change',async function(e){
     const file=e.target.files[0];
     if (!file)return;
     let table=document.getElementById('table');
@@ -12,10 +12,12 @@ document.getElementById('add_data').addEventListener('change',function(e){
     instruction.innerHTML="<button onclick='preview_row(this)'>预览</button> <button onclick='delete_row(this)'>删除</button>"
     const formData=new FormData();
     formData.append('file',file);
-    fetch('/api/save_file',{
+    const result = await fetch('/api/save_file',{
         method:'POST',
         body:formData
-    })
+    });
+    const jsonResult = await result.json();
+    console.log(jsonResult);
     e.target.value=null;
 });
 
