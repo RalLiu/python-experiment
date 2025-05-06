@@ -1,4 +1,4 @@
-from flask import Flask,render_template,jsonify,request
+from flask import Flask,render_template,jsonify,request,send_from_directory
 import pandas as pd
 import os
 app=Flask(__name__)
@@ -49,6 +49,9 @@ def preview(filename):
     table_html=df.head(50).to_html(index=False)
     return render_template('preview.html',table=table_html)
 
+@app.route('/data_files/<path:filename>')
+def download_file(filename):
+    return send_from_directory('data_files', filename, as_attachment=True)
 
 if __name__=='__main__':
     if not os.path.exists(app.config['DATA_FOLDER']):

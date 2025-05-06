@@ -9,7 +9,7 @@ document.getElementById('add_data').addEventListener('change',function(e){
     let instruction=new_row.insertCell(2);
     count.innerHTML=length;
     filename.innerHTML=file.name;
-    instruction.innerHTML="<button onclick='preview_row(this)'>预览</button> <button onclick='delete_row(this)'>删除</button>"
+    instruction.innerHTML=`<button onclick='preview_row(this)' class='button-like'>预览</button> <a href='/data_files/${file.name}' download='${file.name}' class='button-like'>导出</a> <button onclick='delete_row(this)' class='button-like'>删除</button>`;
     const formData=new FormData();
     formData.append('file',file);
     fetch('/api/save_file',{
