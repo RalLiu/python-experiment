@@ -16,6 +16,21 @@
             padding: 8px;
             font-weight: normal;
         }
+        .button-like {
+            display: inline-block;
+            font-size: 14px;
+            padding: 2px 6px;
+            border: 1px solid #000000;
+            border-radius: 2px;
+            background-color: #f0f0f0;
+            color: black;
+            text-decoration: none;
+            cursor: default;
+            font-family: sans-serif;
+        }
+        .button-like:active {
+            background-color: #e0e0e0;
+        }
     </style>
 </head>
 <body>
@@ -32,7 +47,7 @@
             <tr>
                 <th>{{loop.index}}</th>
                 <th>{{name}}</th>
-                <th><button onclick='preview_row(this)'>预览</button> <button onclick='delete_row(this)'>删除</button></th>
+                <th><button onclick='preview_row(this)' class='button-like'>预览</button> <a href='/data_files/{{name}}' download='{{name}}' class="button-like">导出</a> <button onclick='delete_row(this)' class="button-like">删除</button></th>
             </tr>
             {% endfor %}
         {% endif %}
