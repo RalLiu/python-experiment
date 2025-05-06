@@ -47,7 +47,12 @@
             <tr>
                 <th>{{loop.index}}</th>
                 <th>{{name}}</th>
-                <th><button onclick='preview_row(this)' class='button-like'>预览</button> <a href='/data_files/{{name}}' download='{{name}}' class="button-like">导出</a> <button onclick='delete_row(this)' class="button-like">删除</button></th>
+                <th>
+                    <button onclick='preview_row(this)' class='button-like'>预览</button>
+                    <a href='/data_files/{{name}}' download='{{name}}' class="button-like">导出</a>
+                    <button onclick='delete_row(this)' class="button-like">删除</button>
+                    <button onclick='visualization(this)' class="button-like">可视化</button>
+                </th>
             </tr>
             {% endfor %}
         {% endif %}

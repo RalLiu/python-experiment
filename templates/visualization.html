@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>visualization</title>
+    <script>
+        function selectDiagram(selectElement){
+            const selectValue = selectElement.value;
+
+            if (selectValue === 'scatter'){
+                alert('你选择了选项1')
+
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1 style="text-align: center">可视化{{filename}}</h1>
+
+    <label for="styleSelect">请选择图表的样式:</label>
+    <select id="styleSelect" onchange="selectDiagram(this)">
+        <option value="" disabled selected>请选择图表</option>
+        <option value="scatter">散点图</option>
+    </select>
+
+    <select id="x" onchange="selectX(this)">
+        <option value="" disabled selected>请选择x坐标轴</option>
+        {%  for column in columns %}
+            <option value="{{column}}}">{{column}}</option>
+        {%  endfor %}
+    </select>
+
+    <select id="y" onchange="selectY(this)">
+        <option value="" disabled selected>请选择y坐标轴</option>
+        {%  for column in columns %}
+            <option value="{{column}}}">{{column}}</option>
+        {%  endfor %}
+    </select>
+</body>
+</html>

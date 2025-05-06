@@ -9,7 +9,10 @@ document.getElementById('add_data').addEventListener('change',async function(e){
     let instruction=new_row.insertCell(2);
     count.innerHTML=length;
     filename.innerHTML=file.name;
-    instruction.innerHTML=`<button onclick='preview_row(this)' class='button-like'>预览</button> <a href='/data_files/${file.name}' download='${file.name}' class='button-like'>导出</a> <button onclick='delete_row(this)' class='button-like'>删除</button>`;
+    instruction.innerHTML=```<button onclick='preview_row(this)' class='button-like'>预览</button>
+                             <a href='/data_files/${file.name}' download='${file.name}' class='button-like'>导出</a> 
+                             <button onclick='delete_row(this)' class='button-like'>删除</button>
+                             <button onclick='visualization(this)' class="button-like">可视化</button>```;
     const formData=new FormData();
     formData.append('file',file);
     const result = await fetch('/api/save_file',{
@@ -35,5 +38,11 @@ function delete_row(button){
 
 function preview_row(button){
     let next='/preview/'+button.parentNode.parentNode.children[1].innerHTML;
-    window.open(next,'_blank');
+    window.open(next);
+}
+
+function visualization(button) {
+    filename=button.parentNode.parentNode.children[1].innerHTML;
+    let next = '/visualization/' + filename;
+    window.open(next);
 }

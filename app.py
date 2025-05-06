@@ -46,12 +46,18 @@ def preview(filename):
         df=pd.read_csv(target_path)
     else :
         df=pd.read_excel(target_path)
-    table_html=df.head(50).to_html(index=False)
+    table_html=df[::len(df)//50 + 1].to_html(index=False)
     return render_template('preview.html',table=table_html)
 
 @app.route('/data_files/<path:filename>')
 def download_file(filename):
     return send_from_directory('data_files', filename, as_attachment=True)
+
+@app.route('/visualization/<path:filename>')
+def visualization(filename):
+    dp = pd.read_csv('data_files//' + filename)
+    columns = dp.columns.tolist()
+    return render_template('visualization.html', filename=filename, columns=columns)
 
 if __name__=='__main__':
     if not os.path.exists(app.config['DATA_FOLDER']):
