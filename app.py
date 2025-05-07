@@ -57,6 +57,11 @@ def download_file(filename):
 def visualization(filename):
     dp = pd.read_csv('data_files//' + filename)
     columns = dp.columns.tolist()
+    columns.remove('date')
+    columns.remove('volume')
+    columns.remove('dividends')
+    columns.remove('splits')
+    columns.remove('symbol')
     return render_template('visualization.html', filename=filename, columns=columns)
 
 @app.route('/visualization/get-data', methods=['POST'])
@@ -73,9 +78,16 @@ def get_data():
 
     x = df[xAxis].to_list()[::len(df)//50 + 1]
     y = df[yAxis].to_list()[::len(df)//50 + 1]
+    columns = df.columns.to_list()
+    columns.remove('date')
+    columns.remove('volume')
+    columns.remove('dividends')
+    columns.remove('splits')
+    columns.remove('symbol')
 
     return jsonify(
         {
+            'columns':columns,
             'x':x,
             'y':y
         }

@@ -3,40 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <title>visualization</title>
-    <script>
-        import * as echarts from 'echarts';
+</head>
+<body>
+<h1 style="text-align: center">可视化{{ filename }}</h1>
 
-        async function paint() {
-            const style = document.getElementById('styleSelect');
-            const x = document.getElementById('xAxis');
-            const y = document.getElementById('yAxis');
-            const filename = '{{ filename }}';
-            const result = await fetch('/visualization/get-data', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(
-                    {
-                        filename: filename,
-                        x: x.value,
-                        y: y.value
-                    }
-                )
-            });
-            console.log(data.x)
-            console.log(data.y)
+<label for="styleSelect">请选择图表的样式:</label>
+<select id="styleSelect">
+    <option value="" disabled selected>请选择图表</option>
+    <option value="line">折线图</option>
+</select>
 
-            const data = await result.json()
-            const chartDom = document.getElementById('chart')
-            const myChart = echarts.init(chartDom)
+<select id="xAxis">
+    <option value="" disabled selected>请选择x坐标轴</option>
+    <option value="date">时间</option>
+</select>
+
+<select id="yAxis">
+    <option value="" disabled selected>请选择y坐标轴</option>
+    {% block yAxis %}{% endblock %}
+</select>
+
+<button id="certainBtn" onclick="paint()">确认</button>
+
+<div id="chart" style="width: 800px; height: 400px; margin: 0 auto;"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+
+<script>
+    async function paint() {
+        const style = document.getElementById('styleSelect');
+        const x = document.getElementById('xAxis');
+        const y = document.getElementById('yAxis');
+        const filename = '{{ filename }}';
+        const result = await fetch('/visualization/get-data', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(
+                {
+                    filename: filename,
+                    x: x.value,
+                    y: y.value
+                }
+            )
+        });
+
+        const data = await result.json()
+        {#console.log(data.x)#}
+        {#console.log(data.y)#}
+        {#console.log(data.columns)#}
+        const chartDom = document.getElementById('chart')
+        const myChart = echarts.init(chartDom)
+        if (style.value === 'line') {
             const option = {
                 xAxis: {
                     type: 'category',
                     data: data.x
                 },
                 yAxis: {
-                    type: 'category',
+                    type: 'value',
                 },
                 series: [
                     {
@@ -46,34 +72,27 @@
                 ]
             }
             option && myChart.setOption(option)
+        } else if (style.value === 'dynamic') {
+            const variables = data.columns;
+            const option = {
+                title: {
+                    text: '股票价格走势'
+                },
+                tooltip: {
+                    trigger: 'axis'
+                },
+                legend: {
+                    data: variables
+                },
+                xAxis: {
+                    type: 'category',
+                    data: data.x,
+                    name: "时间"
+                }
+            }
         }
-    </script>
-</head>
-<body>
-<h1 style="text-align: center">可视化{{ filename }}</h1>
 
-<label for="styleSelect">请选择图表的样式:</label>
-<select id="styleSelect">
-    <option value="" disabled selected>请选择图表</option>
-    <option value="scatter">散点图</option>
-</select>
-
-<select id="xAxis">
-    <option value="" disabled selected>请选择x坐标轴</option>
-    {% for column in columns %}
-        <option value="{{ column }}">{{ column }}</option>
-    {% endfor %}
-</select>
-
-<select id="yAxis">
-    <option value="" disabled selected>请选择y坐标轴</option>
-    {% for column in columns %}
-        <option value="{{ column }}">{{ column }}</option>
-    {% endfor %}
-</select>
-
-<button id="certainBtn" onclick="paint()">确认</button>
-
-<div id="chart" style="width: 800px; height: 400px; margin: 0 auto;"></div>
+    }
+</script>
 </body>
 </html>
