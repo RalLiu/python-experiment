@@ -59,6 +59,29 @@ def visualization(filename):
     columns = dp.columns.tolist()
     return render_template('visualization.html', filename=filename, columns=columns)
 
+@app.route('/visualization/get-data', methods=['POST'])
+def get_data():
+    data = request.get_json()
+    filename = data.get('filename')
+    path = app.config['DATA_FOLDER'] + '\\' + filename
+    xAxis = data.get('x')
+    yAxis = data.get('y')
+    if filename.endswith('.csv'):
+        df=pd.read_csv(path)
+    else :
+        df=pd.read_excel(path)
+
+    x = df[xAxis].to_list()[::len(df)//50 + 1]
+    y = df[yAxis].to_list()[::len(df)//50 + 1]
+
+    return jsonify(
+        {
+            'x':x,
+            'y':y
+        }
+    )
+
+
 if __name__=='__main__':
     if not os.path.exists(app.config['DATA_FOLDER']):
         os.makedirs(app.config['DATA_FOLDER'])

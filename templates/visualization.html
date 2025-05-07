@@ -4,37 +4,76 @@
     <meta charset="UTF-8">
     <title>visualization</title>
     <script>
-        function selectDiagram(selectElement){
-            const selectValue = selectElement.value;
+        import * as echarts from 'echarts';
 
-            if (selectValue === 'scatter'){
-                alert('你选择了选项1')
+        async function paint() {
+            const style = document.getElementById('styleSelect');
+            const x = document.getElementById('xAxis');
+            const y = document.getElementById('yAxis');
+            const filename = '{{ filename }}';
+            const result = await fetch('/visualization/get-data', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(
+                    {
+                        filename: filename,
+                        x: x.value,
+                        y: y.value
+                    }
+                )
+            });
+            console.log(data.x)
+            console.log(data.y)
 
+            const data = await result.json()
+            const chartDom = document.getElementById('chart')
+            const myChart = echarts.init(chartDom)
+            const option = {
+                xAxis: {
+                    type: 'category',
+                    data: data.x
+                },
+                yAxis: {
+                    type: 'category',
+                },
+                series: [
+                    {
+                        data: data.y,
+                        type: 'line'
+                    }
+                ]
             }
+            option && myChart.setOption(option)
         }
     </script>
 </head>
 <body>
-    <h1 style="text-align: center">可视化{{filename}}</h1>
+<h1 style="text-align: center">可视化{{ filename }}</h1>
 
-    <label for="styleSelect">请选择图表的样式:</label>
-    <select id="styleSelect" onchange="selectDiagram(this)">
-        <option value="" disabled selected>请选择图表</option>
-        <option value="scatter">散点图</option>
-    </select>
+<label for="styleSelect">请选择图表的样式:</label>
+<select id="styleSelect">
+    <option value="" disabled selected>请选择图表</option>
+    <option value="scatter">散点图</option>
+</select>
 
-    <select id="x" onchange="selectX(this)">
-        <option value="" disabled selected>请选择x坐标轴</option>
-        {%  for column in columns %}
-            <option value="{{column}}}">{{column}}</option>
-        {%  endfor %}
-    </select>
+<select id="xAxis">
+    <option value="" disabled selected>请选择x坐标轴</option>
+    {% for column in columns %}
+        <option value="{{ column }}">{{ column }}</option>
+    {% endfor %}
+</select>
 
-    <select id="y" onchange="selectY(this)">
-        <option value="" disabled selected>请选择y坐标轴</option>
-        {%  for column in columns %}
-            <option value="{{column}}}">{{column}}</option>
-        {%  endfor %}
-    </select>
+<select id="yAxis">
+    <option value="" disabled selected>请选择y坐标轴</option>
+    {% for column in columns %}
+        <option value="{{ column }}">{{ column }}</option>
+    {% endfor %}
+</select>
+
+<button id="certainBtn" onclick="paint()">确认</button>
+
+<div id="chart" style="width: 800px; height: 400px; margin: 0 auto;"></div>
 </body>
 </html>
