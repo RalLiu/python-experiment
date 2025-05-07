@@ -1,57 +1,66 @@
-from flask import Flask,render_template,jsonify,request,send_from_directory
+from flask import Flask, render_template, jsonify, request, send_from_directory
 import pandas as pd
 import os
-app=Flask(__name__)
-app.config['DATA_FOLDER']=os.path.abspath('data_files')
+
+app = Flask(__name__)
+app.config['DATA_FOLDER'] = os.path.abspath('data_files')
+
 
 def save_file(file):
-    filename=file.filename
-    file.save(os.path.join(app.config['DATA_FOLDER'],filename))
+    filename = file.filename
+    file.save(os.path.join(app.config['DATA_FOLDER'], filename))
+
 
 def delete_file(file):
-    upload_dir=app.config['DATA_FOLDER']
-    target_path=upload_dir+'\\'+file
+    upload_dir = app.config['DATA_FOLDER']
+    target_path = upload_dir + '\\' + file
     if os.path.isfile(target_path):
         os.remove(target_path)
 
+
 @app.route('/')
 def mainframe():
-    file_names=os.listdir(app.config['DATA_FOLDER'])
+    file_names = os.listdir(app.config['DATA_FOLDER'])
     file_names = [f for f in file_names if os.path.isfile(os.path.join(app.config['DATA_FOLDER'], f))]
-    return render_template('mainframe.html',list=file_names)
+    return render_template('mainframe.html', list=file_names)
 
-@app.route('/api/save_file',methods=['POST'])
+
+@app.route('/api/save_file', methods=['POST'])
 def api_save_file():
-    file=request.files['file']
-    result=save_file(file)
+    file = request.files['file']
+    result = save_file(file)
     return jsonify({
-        'status':'success',
-        'result':result
+        'status': 'success',
+        'result': result
     })
 
-@app.route('/api/delete_file',methods=['POST'])
+
+@app.route('/api/delete_file', methods=['POST'])
 def api_delete_file():
-    file=request.form.get('filename')
-    result=delete_file(file)
+    file = request.form.get('filename')
+    result = delete_file(file)
     return jsonify({
-        'status':'success',
-        'result':result
+        'status': 'success',
+        'result': result
     })
+
 
 @app.route('/preview/<filename>')
 def preview(filename):
-    upload_dir=app.config['DATA_FOLDER']
-    target_path=upload_dir+'\\'+filename
+    upload_dir = app.config['DATA_FOLDER']
+    target_path = upload_dir + '\\' + filename
     if filename.endswith('.csv'):
-        df=pd.read_csv(target_path)
-    else :
-        df=pd.read_excel(target_path)
-    table_html=df[::len(df)//50 + 1].to_html(index=False)
-    return render_template('preview.html',table=table_html)
+        df = pd.read_csv(target_path)
+    else:
+        df = pd.read_excel(target_path)
+    table_html = df[::len(df) // 50 + 1].to_html(index=False)
+    return render_template('preview.html', table=table_html)
+
 
 @app.route('/data_files/<path:filename>')
 def download_file(filename):
     return send_from_directory('data_files', filename, as_attachment=True)
+
 
 @app.route('/visualization/<path:filename>')
 def visualization(filename):
@@ -64,6 +73,7 @@ def visualization(filename):
     columns.remove('symbol')
     return render_template('visualization.html', filename=filename, columns=columns)
 
+
 @app.route('/visualization/get-data', methods=['POST'])
 def get_data():
     data = request.get_json()
@@ -72,12 +82,17 @@ def get_data():
     xAxis = data.get('x')
     yAxis = data.get('y')
     if filename.endswith('.csv'):
-        df=pd.read_csv(path)
-    else :
-        df=pd.read_excel(path)
+        df = pd.read_csv(path)
+    else:
+        df = pd.read_excel(path)
 
-    x = df[xAxis].to_list()[::len(df)//50 + 1]
-    y = df[yAxis].to_list()[::len(df)//50 + 1]
+    x = df[xAxis].to_list()[::len(df) // 50 + 1]
+    y = df[yAxis].to_list()[::len(df) // 50 + 1]
+    open_lis = df['open'].to_list()[::len(df) // 50 + 1]
+    high_lis = df['high'].to_list()[::len(df) // 50 + 1]
+    low_lis = df['low'].to_list()[::len(df) // 50 + 1]
+    close_lis = df['close'].to_list()[::len(df) // 50 + 1]
+    adjclose_lis = df['adjclose'].to_list()[::len(df) // 50 + 1]
     columns = df.columns.to_list()
     columns.remove('date')
     columns.remove('volume')
@@ -87,14 +102,19 @@ def get_data():
 
     return jsonify(
         {
-            'columns':columns,
-            'x':x,
-            'y':y
+            'columns': columns,
+            'x': x,
+            'y': y,
+            'open': open_lis,
+            'high': high_lis,
+            'low': low_lis,
+            'close': close_lis,
+            'adjclose': adjclose_lis
         }
     )
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     if not os.path.exists(app.config['DATA_FOLDER']):
         os.makedirs(app.config['DATA_FOLDER'])
     app.run(debug=True)

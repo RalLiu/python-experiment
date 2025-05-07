@@ -8,9 +8,10 @@
 <h1 style="text-align: center">可视化{{ filename }}</h1>
 
 <label for="styleSelect">请选择图表的样式:</label>
-<select id="styleSelect">
+<select id="styleSelect" onchange="selectStyle()">
     <option value="" disabled selected>请选择图表</option>
     <option value="line">折线图</option>
+    <option value="dynamic">动态图</option>
 </select>
 
 <select id="xAxis">
@@ -20,7 +21,9 @@
 
 <select id="yAxis">
     <option value="" disabled selected>请选择y坐标轴</option>
-    {% block yAxis %}{% endblock %}
+    {% for column in  columns %}
+        <option value={{ column }}>{{ column }}</option>
+    {% endfor %}
 </select>
 
 <button id="certainBtn" onclick="paint()">确认</button>
@@ -30,24 +33,54 @@
 <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
 
 <script>
+    function selectStyle() {
+        const selectedStyle = document.getElementById('styleSelect').value
+        const yAxisSelect = document.getElementById('yAxis')
+
+        if (selectedStyle !== 'line') {
+            yAxisSelect.disabled = true
+        } else {
+            yAxisSelect.disabled = false
+        }
+    }
+
     async function paint() {
         const style = document.getElementById('styleSelect');
         const x = document.getElementById('xAxis');
         const y = document.getElementById('yAxis');
         const filename = '{{ filename }}';
-        const result = await fetch('/visualization/get-data', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(
-                {
-                    filename: filename,
-                    x: x.value,
-                    y: y.value
-                }
-            )
-        });
+        const url = '/visualization/get-data';
+        let result;
+
+        if (y.disabled === true) {
+            result = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(
+                    {
+                        filename: filename,
+                        x: x.value,
+                        y: x.value
+                    }
+                )
+            });
+        } else {
+            result = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(
+                    {
+                        filename: filename,
+                        x: x.value,
+                        y: y.value
+                    }
+                )
+            });
+        }
 
         const data = await result.json()
         {#console.log(data.x)#}
@@ -71,9 +104,18 @@
                     }
                 ]
             }
-            option && myChart.setOption(option)
+            myChart.setOption(option, true)
         } else if (style.value === 'dynamic') {
             const variables = data.columns;
+            const _rawData = {
+                date: data.x,
+                open: data['open'],
+                high: data['high'],
+                low: data['low'],
+                close: data['close'],
+                adjclose: data['adjclose']
+            };
+
             const option = {
                 title: {
                     text: '股票价格走势'
@@ -86,10 +128,20 @@
                 },
                 xAxis: {
                     type: 'category',
-                    data: data.x,
-                    name: "时间"
-                }
-            }
+                    data: _rawData.date,
+                    name: '时间'
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '价格'
+                },
+                series: variables.map(v => ({
+                    name: v,
+                    type: 'line',
+                    data: _rawData[v]
+                }))
+            };
+            myChart.setOption(option, true)
         }
 
     }
