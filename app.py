@@ -78,8 +78,6 @@ def visualization(filename):
         columns.remove('splits')
     if 'symbol' in columns:
         columns.remove('symbol')
-    if 'volume' in columns:
-        columns.remove('volume')
     return render_template('visualization.html', filename=filename, columns=columns)
 
 
@@ -102,6 +100,7 @@ def get_data():
     low_lis = df['low'].to_list()[::len(df) // 50 + 1]
     close_lis = df['close'].to_list()[::len(df) // 50 + 1]
     adjclose_lis = df['adjclose'].to_list()[::len(df) // 50 + 1]
+    volume_lis=df['volume'].to_list()[::len(df) // 50 + 1]
     columns = df.columns.to_list()
     if 'date' in columns:
         columns.remove('date')
@@ -111,8 +110,6 @@ def get_data():
         columns.remove('splits')
     if 'symbol' in columns:
         columns.remove('symbol')
-    if 'volume' in columns:
-        columns.remove('volume')
 
     return jsonify(
         {
@@ -123,7 +120,8 @@ def get_data():
             'high': high_lis,
             'low': low_lis,
             'close': close_lis,
-            'adjclose': adjclose_lis
+            'adjclose': adjclose_lis,
+            'volume':volume_lis
         }
     )
 

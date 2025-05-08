@@ -20,10 +20,22 @@
     <option value="date">时间</option>
 </select>
 
+<template id="scatterOptionsTemplate">
+    <option value="" disabled selected>请选择x坐标轴</option>
+    {% for column in columns %}
+        <option value="{{ column }}">{{ column }}</option>
+    {% endfor %}
+</template>
+
+<template id="otherOptionsTemplate">
+    <option value="" disabled selected>请选择x坐标轴</option>
+    <option value="date">时间</option>
+</template>
+
 <select id="yAxis">
     <option value="" disabled selected>请选择y坐标轴</option>
     {% for column in columns %}
-        <option value={{ column }}>{{ column }}</option>
+        <option value="{{ column }}">{{ column }}</option>
     {% endfor %}
 </select>
 
@@ -36,6 +48,7 @@
 <script>
     function selectStyle() {
         const selectedStyle = document.getElementById('styleSelect').value
+        const xAxisSelect = document.getElementById('xAxis')
         const yAxisSelect = document.getElementById('yAxis')
 
         if (selectedStyle !== 'dynamic') {
@@ -43,7 +56,21 @@
         } else {
             yAxisSelect.disabled = true
         }
+        
+        if (selectedStyle == 'scatter'){
+            xAxisSelect.innerHTML='';
+            const template = document.getElementById('scatterOptionsTemplate');
+            const content = template.content.cloneNode(true);
+            xAxisSelect.appendChild(content);
+        }
+        else {
+            xAxisSelect.innerHTML='';
+            const template = document.getElementById('otherOptionsTemplate');
+            const content = template.content.cloneNode(true);
+            xAxisSelect.appendChild(content);
+        }
     }
+    
 
     async function paint() {
         const style = document.getElementById('styleSelect');
@@ -113,7 +140,6 @@
                 close: data['close'],
                 adjclose: data['adjclose']
             };
-
             const option = {
                 title: {
                     text: '股票价格走势'
@@ -145,8 +171,10 @@
         }else if(style.value === 'scatter'){
             option = {
                 xAxis: {
-                    type: 'category',
-                    data: data.x
+                    type: 'value',
+                    name: '价格',
+                    min: 40,
+                    max: 200
                 },
                 yAxis: {
                     type: 'value',
@@ -155,10 +183,26 @@
                     max: 200
                 },
                 series: [{
-                    symbolSize: 10,
+                    symbolSize: 5,
                     type: 'scatter',
                     data: data.x.map((x, i) => [x, data.y[i]])
                 }]
+            }
+            if(x.value === 'volume'){
+                option.xAxis={
+                    type: 'value',
+                    name: '数量',
+                    min: 0,
+                    max: 100000000
+                }
+            }
+            if(y.value === 'volume'){
+                option.yAxis={
+                    type: 'value',
+                    name: '数量',
+                    min: 0,
+                    max: 100000000
+                }
             }
             myChart.setOption(option, true)
         }
