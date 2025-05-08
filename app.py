@@ -70,11 +70,16 @@ def download_file(filename):
 def visualization(filename):
     dp = pd.read_csv('data_files//' + filename)
     columns = dp.columns.tolist()
-    columns.remove('date')
-    columns.remove('volume')
-    columns.remove('dividends')
-    columns.remove('splits')
-    columns.remove('symbol')
+    if 'date' in columns:
+        columns.remove('date')
+    if 'dividends' in columns:
+        columns.remove('dividends')
+    if 'splits' in columns:
+        columns.remove('splits')
+    if 'symbol' in columns:
+        columns.remove('symbol')
+    if 'volume' in columns:
+        columns.remove('volume')
     return render_template('visualization.html', filename=filename, columns=columns)
 
 
@@ -98,11 +103,16 @@ def get_data():
     close_lis = df['close'].to_list()[::len(df) // 50 + 1]
     adjclose_lis = df['adjclose'].to_list()[::len(df) // 50 + 1]
     columns = df.columns.to_list()
-    columns.remove('date')
-    columns.remove('volume')
-    columns.remove('dividends')
-    columns.remove('splits')
-    columns.remove('symbol')
+    if 'date' in columns:
+        columns.remove('date')
+    if 'dividends' in columns:
+        columns.remove('dividends')
+    if 'splits' in columns:
+        columns.remove('splits')
+    if 'symbol' in columns:
+        columns.remove('symbol')
+    if 'volume' in columns:
+        columns.remove('volume')
 
     return jsonify(
         {
@@ -149,7 +159,7 @@ def prediction():
     model.fit(X_train, y_train)
     history = df.copy()  # 用于滚动更新 
     future_data = []
-    for i in range(50):
+    for i in range(20):
         history['return'] = (history['close'] / history['close'].shift(1)) - 1
         return_mean_3 = history['return'].iloc[-3:].mean()
         volatility_3 = history['close'].iloc[-3:].std()

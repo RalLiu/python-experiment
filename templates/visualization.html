@@ -22,7 +22,7 @@
 
 <select id="yAxis">
     <option value="" disabled selected>请选择y坐标轴</option>
-    {% for column in  columns %}
+    {% for column in columns %}
         <option value={{ column }}>{{ column }}</option>
     {% endfor %}
 </select>
@@ -84,9 +84,6 @@
         }
 
         const data = await result.json()
-        {#console.log(data.x)#}
-        {#console.log(data.y)#}
-        {#console.log(data.columns)#}
         const chartDom = document.getElementById('chart')
         const myChart = echarts.init(chartDom)
         if (style.value === 'line') {
