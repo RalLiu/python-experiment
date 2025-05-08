@@ -1,6 +1,10 @@
 from flask import Flask, render_template, jsonify, request, send_from_directory
 import pandas as pd
 import os
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.multioutput import MultiOutputRegressor
+from sklearn.model_selection import train_test_split
+import datetime
 
 app = Flask(__name__)
 app.config['DATA_FOLDER'] = os.path.abspath('data_files')
@@ -113,6 +117,84 @@ def get_data():
         }
     )
 
+@app.route('/prediction',methods=['POST'])
+def prediction():
+    filename = request.form.get('filename')
+    path = app.config['DATA_FOLDER'] + '\\' + filename
+    if filename.endswith('.csv'):
+        df = pd.read_csv(path)
+    else:
+        df = pd.read_excel(path)
+    df=df.sort_values('date')
+    #前一日数据
+    df['open_lag1'] = df['open'].shift(1)
+    df['high_lag1'] = df['high'].shift(1)
+    df['low_lag1'] = df['low'].shift(1)
+    df['close_lag1'] = df['close'].shift(1)
+    df['volume_lag1'] = df['volume'].shift(1)
+    df['return_lag1'] = (df['close'].shift(1) - df['open'].shift(1)) / df['open'].shift(1)
+    #最近三天平均收益率：涨幅及趋势
+    df['return_mean_3'] = ((df['close'] / df['close'].shift(1)) - 1).rolling(3).mean()
+    #最近三天收盘价标准差：是否剧烈波动
+    df['volatility_3'] = df['close'].rolling(3).std()
+    #成交量和最近三日成交量比值：交易活跃度影响
+    df['volume_ratio_3'] = df['volume'] / df['volume'].rolling(3).mean()
+    features = ['open_lag1', 'high_lag1', 'low_lag1', 'close_lag1', 'volume_lag1',
+            'return_lag1', 'return_mean_3', 'volatility_3', 'volume_ratio_3']
+    target = ['open', 'high', 'low', 'close', 'volume']
+    X = df[features]
+    y = df[target]
+    X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=False, test_size=0.2)
+    model = MultiOutputRegressor(RandomForestRegressor(n_estimators=100, random_state=42))
+    model.fit(X_train, y_train)
+    history = df.copy()  # 用于滚动更新 
+    future_data = []
+    for i in range(50):
+        history['return'] = (history['close'] / history['close'].shift(1)) - 1
+        return_mean_3 = history['return'].iloc[-3:].mean()
+        volatility_3 = history['close'].iloc[-3:].std()
+        volume_ratio_3 = history['volume'].iloc[-1] / history['volume'].iloc[-3:].mean()
+        last_row = history.iloc[-1]
+        input_features = {
+            'open_lag1': last_row['open'],
+            'high_lag1': last_row['high'],
+            'low_lag1': last_row['low'],
+            'close_lag1': last_row['close'],
+            'volume_lag1': last_row['volume'],
+            'return_lag1': (last_row['close'] - last_row['open']) / last_row['open'],
+            'return_mean_3': return_mean_3,
+            'volatility_3': volatility_3,
+            'volume_ratio_3': volume_ratio_3
+        }
+        X_future = pd.DataFrame([input_features])
+        pred = model.predict(X_future)[0]
+        pred_open, pred_high, pred_low, pred_close, pred_volume = pred
+        date_obj = datetime.datetime.strptime(last_row['date'], '%Y-%m-%d')
+        next_date = date_obj + datetime.timedelta(days=1)
+        next_date = next_date.strftime('%Y-%m-%d')
+        predicted_row = {
+            'date': next_date,
+            'open': pred_open,
+            'high': pred_high,
+            'low': pred_low,
+            'close': pred_close,
+            'volume': pred_volume,
+            'adjclose': pred_close
+        }
+        future_data.append(predicted_row)
+        history = pd.concat([history, pd.DataFrame([predicted_row])], ignore_index=True)
+        future_df = pd.DataFrame(future_data)
+        if filename.endswith('.csv') or filename.endswith('.xls'):
+            change_name=filename[:-4]+'_prediction_data.csv'
+            future_df.to_csv(app.config['DATA_FOLDER']+'//'+filename[:-4]+'_prediction_data.csv', index=False)
+        else :
+            change_name=filename[:-5]+'_prediction_data.csv'
+            future_df.to_csv(app.config['DATA_FOLDER']+'//'+filename[:-5]+'_prediction_data.csv', index=False)
+    
+    return jsonify({
+        'status': 'success',
+        'change_name':change_name
+    })
 
 if __name__ == '__main__':
     if not os.path.exists(app.config['DATA_FOLDER']):
