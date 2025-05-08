@@ -204,6 +204,30 @@ def prediction():
         'change_name':change_name
     })
 
+@app.route('/data_cleaning',methods=['POST'])
+def data_cleaning():
+    filename = request.form.get('filename')
+    path = app.config['DATA_FOLDER'] + '\\' + filename
+    if filename.endswith('.csv'):
+        df = pd.read_csv(path)
+    else:
+        df = pd.read_excel(path)
+    
+    change_df=df
+    #待数据清理部分代码
+
+
+    if filename.endswith('.csv') or filename.endswith('.xls'):
+        change_name=filename[:-4]+'_cleaning_data.csv'
+        change_df.to_csv(app.config['DATA_FOLDER']+'//'+filename[:-4]+'_cleaning_data.csv', index=False)
+    else :
+        change_name=filename[:-5]+'_cleaning_data.csv'
+        change_df.to_csv(app.config['DATA_FOLDER']+'//'+filename[:-5]+'_cleaning_data.csv', index=False)
+    return jsonify({
+        'status': 'success',
+        'change_name':change_name
+    })
+
 if __name__ == '__main__':
     if not os.path.exists(app.config['DATA_FOLDER']):
         os.makedirs(app.config['DATA_FOLDER'])
