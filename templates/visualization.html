@@ -12,6 +12,7 @@
     <option value="" disabled selected>请选择图表</option>
     <option value="line">折线图</option>
     <option value="dynamic">动态图</option>
+    <option value="scatter">散点图</option>
 </select>
 
 <select id="xAxis">
@@ -37,10 +38,10 @@
         const selectedStyle = document.getElementById('styleSelect').value
         const yAxisSelect = document.getElementById('yAxis')
 
-        if (selectedStyle !== 'line') {
-            yAxisSelect.disabled = true
-        } else {
+        if (selectedStyle !== 'dynamic') {
             yAxisSelect.disabled = false
+        } else {
+            yAxisSelect.disabled = true
         }
     }
 
@@ -133,7 +134,9 @@
                 },
                 yAxis: {
                     type: 'value',
-                    name: '价格'
+                    name: '价格',
+                    min: 40,
+                    max: 200
                 },
                 series: variables.map(v => ({
                     name: v,
@@ -142,8 +145,26 @@
                 }))
             };
             myChart.setOption(option, true)
+        }else if(style.value === 'scatter'){
+            option = {
+                xAxis: {
+                    type: 'category',
+                    data: data.x
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '价格',
+                    min: 40,
+                    max: 200
+                },
+                series: [{
+                    symbolSize: 10,
+                    type: 'scatter',
+                    data: data.x.map((x, i) => [x, data.y[i]])
+                }]
+            }
+            myChart.setOption(option, true)
         }
-
     }
 </script>
 </body>
