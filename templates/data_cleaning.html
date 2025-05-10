@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据清洗</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        select, input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .button-group {
+            text-align: center;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .description {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>数据清洗 - {{ filename }}</h1>
+    
+    <form id="cleaningForm">
+        <input type="hidden" id="filename" name="filename" value="{{ filename }}">
+        
+        <div class="form-group">
+            <label for="missing_method">缺失值处理方法：</label>
+            <select id="missing_method" name="missing_method">
+                <option value="mean">均值填充</option>
+                <option value="median">中位数填充</option>
+                <option value="mode">众数填充</option>
+            </select>
+            <div class="description">选择用于填充数值型数据缺失值的方法。非数值型数据将使用众数填充。</div>
+        </div>
+        
+        <div class="form-group">
+            <label for="outlier_method">异常值检测方法：</label>
+            <select id="outlier_method" name="outlier_method">
+                <option value="zscore">Z-score方法</option>
+                <option value="iqr">四分位距(IQR)方法</option>
+            </select>
+            <div class="description">选择用于检测数值型数据异常值的方法。</div>
+        </div>
+        
+        <div class="form-group" id="zscore_group">
+            <label for="zscore_threshold">Z-score阈值：</label>
+            <input type="number" id="zscore_threshold" name="zscore_threshold" value="3.0" step="0.1" min="1.0" max="10.0">
+            <div class="description">Z-score大于此值的数据点将被视为异常值。通常设置为3.0。</div>
+        </div>
+        
+        <div class="form-group" id="iqr_group" style="display: none;">
+            <label for="iqr_factor">IQR系数：</label>
+            <input type="number" id="iqr_factor" name="iqr_factor" value="1.5" step="0.1" min="0.5" max="5.0">
+            <div class="description">用于计算异常值界限的系数。通常设置为1.5。</div>
+        </div>
+        
+        <div class="button-group">
+            <button type="button" onclick="submitForm()">开始清洗</button>
+        </div>
+    </form>
+
+    <script>
+        // 根据选择的异常值检测方法显示相应的参数设置
+        document.getElementById('outlier_method').addEventListener('change', function() {
+            const method = this.value;
+            if (method === 'zscore') {
+                document.getElementById('zscore_group').style.display = 'block';
+                document.getElementById('iqr_group').style.display = 'none';
+            } else if (method === 'iqr') {
+                document.getElementById('zscore_group').style.display = 'none';
+                document.getElementById('iqr_group').style.display = 'block';
+            }
+        });
+        
+        // 提交表单
+        function submitForm() {
+            const form = document.getElementById('cleaningForm');
+            const formData = new FormData(form);
+            
+            fetch('/data_cleaning', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('数据清洗完成！新文件名: ' + data.change_name);
+                    window.opener.location.reload(); // 刷新父窗口
+                    window.close(); // 关闭当前窗口
+                } else {
+                    alert('数据清洗失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('发生错误，请查看控制台获取详细信息。');
+            });
+        }
+    </script>
+</body>
+</html>
