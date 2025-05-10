@@ -1,5 +1,6 @@
 from flask import Flask, render_template, jsonify, request, send_from_directory
 import pandas as pd
+import numpy as np
 import os
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.multioutput import MultiOutputRegressor
@@ -79,6 +80,10 @@ def visualization(filename):
     if 'symbol' in columns:
         columns.remove('symbol')
     return render_template('visualization.html', filename=filename, columns=columns)
+
+@app.route('/data_cleaning/<filename>')
+def data_cleaning_page(filename):
+    return render_template('data_cleaning.html', filename=filename)
 
 
 @app.route('/visualization/get-data', methods=['POST'])
@@ -213,10 +218,73 @@ def data_cleaning():
     else:
         df = pd.read_excel(path)
     
-    change_df=df
-    #待数据清理部分代码
-
-
+    # 创建数据清洗表单
+    form_data = request.form
+    
+    # 默认使用均值填充缺失值
+    missing_method = form_data.get('missing_method', 'mean')
+    # 默认使用Z-score方法检测异常值
+    outlier_method = form_data.get('outlier_method', 'zscore')
+    # 默认Z-score阈值为3
+    zscore_threshold = float(form_data.get('zscore_threshold', 3.0))
+    # 默认IQR系数为1.5
+    iqr_factor = float(form_data.get('iqr_factor', 1.5))
+    
+    # 创建原始数据的副本
+    change_df = df.copy()
+    
+    # 处理缺失值
+    numeric_columns = change_df.select_dtypes(include=['number']).columns
+    
+    for column in numeric_columns:
+        # 检查列中是否有缺失值
+        if change_df[column].isnull().any():
+            if missing_method == 'mean':
+                # 使用均值填充缺失值
+                mean_value = change_df[column].mean()
+                change_df[column].fillna(mean_value, inplace=True)
+            elif missing_method == 'median':
+                # 使用中位数填充缺失值
+                median_value = change_df[column].median()
+                change_df[column].fillna(median_value, inplace=True)
+            elif missing_method == 'mode':
+                # 使用众数填充缺失值
+                mode_value = change_df[column].mode()[0]
+                change_df[column].fillna(mode_value, inplace=True)
+    
+    # 处理非数值列的缺失值（使用众数填充）
+    non_numeric_columns = change_df.select_dtypes(exclude=['number']).columns
+    for column in non_numeric_columns:
+        if change_df[column].isnull().any():
+            # 对于非数值列，使用众数填充
+            mode_value = change_df[column].mode()[0]
+            change_df[column].fillna(mode_value, inplace=True)
+    
+    # 检测并处理异常值
+    for column in numeric_columns:
+        if outlier_method == 'zscore':
+            # 使用Z-score方法检测异常值
+            z_scores = np.abs((change_df[column] - change_df[column].mean()) / change_df[column].std())
+            outliers = z_scores > zscore_threshold
+            
+            # 将异常值替换为列的均值
+            if outliers.any():
+                mean_value = change_df.loc[~outliers, column].mean()
+                change_df.loc[outliers, column] = mean_value
+                
+        elif outlier_method == 'iqr':
+            # 使用IQR方法检测异常值
+            Q1 = change_df[column].quantile(0.25)
+            Q3 = change_df[column].quantile(0.75)
+            IQR = Q3 - Q1
+            
+            lower_bound = Q1 - iqr_factor * IQR
+            upper_bound = Q3 + iqr_factor * IQR
+            
+            # 将异常值替换为上下界
+            change_df.loc[change_df[column] < lower_bound, column] = lower_bound
+            change_df.loc[change_df[column] > upper_bound, column] = upper_bound
+    
     if filename.endswith('.csv') or filename.endswith('.xls'):
         change_name=filename[:-4]+'_cleaning_data.csv'
         change_df.to_csv(app.config['DATA_FOLDER']+'//'+filename[:-4]+'_cleaning_data.csv', index=False)
