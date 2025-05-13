@@ -196,13 +196,14 @@ def prediction():
         }
         future_data.append(predicted_row)
         history = pd.concat([history, pd.DataFrame([predicted_row])], ignore_index=True)
-        future_df = pd.DataFrame(future_data)
-        if filename.endswith('.csv') or filename.endswith('.xls'):
-            change_name=filename[:-4]+'_prediction_data.csv'
-            future_df.to_csv(app.config['DATA_FOLDER']+'//'+filename[:-4]+'_prediction_data.csv', index=False)
-        else :
-            change_name=filename[:-5]+'_prediction_data.csv'
-            future_df.to_csv(app.config['DATA_FOLDER']+'//'+filename[:-5]+'_prediction_data.csv', index=False)
+        
+    future_df = pd.DataFrame(future_data)
+    if filename.endswith('.csv') or filename.endswith('.xls'):
+        change_name=filename[:-4]+'_prediction_data.csv'
+        future_df.to_csv(app.config['DATA_FOLDER']+'//'+filename[:-4]+'_prediction_data.csv', index=False)
+    else :
+        change_name=filename[:-5]+'_prediction_data.csv'
+        future_df.to_csv(app.config['DATA_FOLDER']+'//'+filename[:-5]+'_prediction_data.csv', index=False)
     
     return jsonify({
         'status': 'success',
